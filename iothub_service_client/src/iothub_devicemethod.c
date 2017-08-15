@@ -226,6 +226,7 @@ static HTTP_HEADERS_HANDLE createHttpHeader()
     }
     else
     {
+        LogInfo("Header: %s: %s", HTTP_HEADER_KEY_CONTENT_TYPE, HTTP_HEADER_VAL_CONTENT_TYPE);
         free((void*)guid);
     }
 
@@ -343,6 +344,7 @@ static IOTHUB_DEVICE_METHOD_RESULT sendHttpRequestDeviceMethod(IOTHUB_SERVICE_CL
         STRING_delete(accessKey);
         STRING_delete(uriResouce);
     }
+LogInfo("%.*s", BUFFER_length(responseBuffer), BUFFER_u_char(responseBuffer));
     return result;
 }
 
