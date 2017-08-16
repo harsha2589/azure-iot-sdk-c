@@ -7,15 +7,17 @@
 #include "azure_c_shared_utility/tlsio.h"
 #include "azure_c_shared_utility/platform.h"
 #include "iothubtransport_mqtt_common.h"
+#include "azure_c_shared_utility/http_proxy_io.h"
+
+#define MQTT_PORT_NUM               8883
 
 static XIO_HANDLE getIoTransportProvider(const char* fully_qualified_name, const MQTT_TRANSPORT_PROXY_OPTIONS* mqtt_transport_proxy_options)
 {
     XIO_HANDLE result;
+    TLSIO_CONFIG tls_io_config;
 
     /* Codes_SRS_IOTHUB_MQTT_TRANSPORT_01_001: [ `getIoTransportProvider` shall obtain the TLS IO interface handle by calling `platform_get_default_tlsio`. ]*/
     const IO_INTERFACE_DESCRIPTION* io_interface_description = platform_get_default_tlsio();
-    (void)mqtt_transport_proxy_options;
-
     if (io_interface_description == NULL)
     {
         /* Codes_SRS_IOTHUB_MQTT_TRANSPORT_07_013: [ If `platform_get_default_tlsio` returns NULL, `getIoTransportProvider` shall return NULL. ] */
@@ -24,20 +26,55 @@ static XIO_HANDLE getIoTransportProvider(const char* fully_qualified_name, const
     }
     else
     {
+        int failure_encountered = 0;
+        HTTP_PROXY_IO_CONFIG proxy_config;
+        memset(&proxy_config, 0, sizeof(HTTP_PROXY_IO_CONFIG));
+
         /* Codes_SRS_IOTHUB_MQTT_TRANSPORT_01_002: [ The TLS IO parameters shall be a `TLSIO_CONFIG` structure filled as below: ]*/
-        TLSIO_CONFIG tls_io_config;
+        memset(&tls_io_config, 0, sizeof(TLSIO_CONFIG));
 
         /* Codes_SRS_IOTHUB_MQTT_TRANSPORT_01_003: [ - `hostname` shall be set to `fully_qualified_name`. ]*/
         tls_io_config.hostname = fully_qualified_name;
         /* Codes_SRS_IOTHUB_MQTT_TRANSPORT_01_004: [ - `port` shall be set to 8883. ]*/
-        tls_io_config.port = 8883;
-        /* Codes_SRS_IOTHUB_MQTT_TRANSPORT_01_005: [ - `underlying_io_interface` shall be set to NULL. ]*/
-        tls_io_config.underlying_io_interface = NULL;
-        /* Codes_SRS_IOTHUB_MQTT_TRANSPORT_01_006: [ - `underlying_io_parameters` shall be set to NULL. ]*/
-        tls_io_config.underlying_io_parameters = NULL;
+        tls_io_config.port = MQTT_PORT_NUM;
 
-        /* Codes_SRS_IOTHUB_MQTT_TRANSPORT_07_012: [ `getIoTransportProvider` shall return the `XIO_HANDLE` returned by `xio_create`. ] */
-        result = xio_create(io_interface_description, &tls_io_config);
+        if (mqtt_transport_proxy_options != NULL)
+        {
+            /* Codes_SRS_IOTHUB_MQTT_TRANSPORT_07_028: [ if mqtt_transport_proxy_options is not NULL getIoTransportProvider shall copy the proxy_hostname, proxy_port, username and password. ] */
+            tls_io_config.underlying_io_interface = http_proxy_io_get_interface_description();
+            if (tls_io_config.underlying_io_interface == NULL)
+            {
+                LogError("failed http_proxy_io_get_interface_description return NULL");
+                failure_encountered = __FAILURE__;
+            }
+            else
+            {
+                proxy_config.hostname = tls_io_config.hostname;
+                proxy_config.port = tls_io_config.port;
+
+                proxy_config.proxy_hostname = mqtt_transport_proxy_options->host_address;
+                proxy_config.proxy_port = mqtt_transport_proxy_options->port;
+                proxy_config.username = mqtt_transport_proxy_options->username;
+                proxy_config.password = mqtt_transport_proxy_options->password;
+                tls_io_config.underlying_io_parameters = &proxy_config;
+            }
+        }
+
+        if (failure_encountered)
+        {
+            // Failure from transport
+            result = NULL;
+        }
+        else
+        {
+            /* Codes_SRS_IOTHUB_MQTT_TRANSPORT_07_012: [ `getIoTransportProvider` shall return the `XIO_HANDLE` returned by `xio_create`. ] */
+            result = xio_create(io_interface_description, &tls_io_config);
+            if (result == NULL)
+            {
+                LogError("failed calling xio_create on underlying io");
+                result = NULL;
+            }
+        }
     }
     return result;
 }

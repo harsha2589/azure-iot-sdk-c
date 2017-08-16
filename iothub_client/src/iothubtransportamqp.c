@@ -5,6 +5,7 @@
 #include "iothubtransport_amqp_common.h"
 #include "azure_c_shared_utility/tlsio.h"
 #include "azure_c_shared_utility/platform.h"
+#include "azure_c_shared_utility/http_proxy_io.h"
 
 #define RESULT_OK 0
 #define DEFAULT_IOTHUB_AMQP_PORT 5671
@@ -25,6 +26,10 @@ static XIO_HANDLE getTLSIOTransport(const char* fqdn, const AMQP_TRANSPORT_PROXY
     }
     else
     {
+        int failure_encountered = 0;
+        HTTP_PROXY_IO_CONFIG proxy_config;
+        memset(&proxy_config, 0, sizeof(HTTP_PROXY_IO_CONFIG));
+
         /* Codes_SRS_IOTHUBTRANSPORTAMQP_01_010: [ The TLS IO parameters shall be a `TLSIO_CONFIG` structure filled as below: ]*/
         /* Codes_SRS_IOTHUBTRANSPORTAMQP_01_011: [ - `hostname` shall be set to `fqdn`. ]*/
         tls_io_config.hostname = fqdn;
@@ -36,11 +41,41 @@ static XIO_HANDLE getTLSIOTransport(const char* fqdn, const AMQP_TRANSPORT_PROXY
         /* Codes_SRS_IOTHUBTRANSPORTAMQP_01_014: [ `underlying_io_parameters` shall be set to NULL. ]*/
         tls_io_config.underlying_io_parameters = NULL;
 
-        /* Codes_SRS_IOTHUBTRANSPORTAMQP_09_003: [If `platform_get_default_tlsio` returns NULL `getTLSIOTransport` shall return NULL.] */
-        /* Codes_SRS_IOTHUBTRANSPORTAMQP_09_004: [`getTLSIOTransport` shall return the `XIO_HANDLE` created using `xio_create`.] */
-        if ((result = xio_create(io_interface_description, &tls_io_config)) == NULL)
+        if (amqp_transport_proxy_options != NULL)
         {
-            LogError("Failed to get the TLS/IO transport (xio_create failed)");
+            /* Codes_SRS_IOTHUBTRANSPORTAMQP_07_001: [ If amqp_transport_proxy_options is not NULL getIoTransportProvider shall copy the proxy_hostname, proxy_port, username and password. ] */
+            tls_io_config.underlying_io_interface = http_proxy_io_get_interface_description();
+            if (tls_io_config.underlying_io_interface == NULL)
+            {
+                LogError("failed http_proxy_io_get_interface_description return NULL");
+                failure_encountered = __FAILURE__;
+            }
+            else
+            {
+                proxy_config.hostname = tls_io_config.hostname;
+                proxy_config.port = tls_io_config.port;
+
+                proxy_config.proxy_hostname = amqp_transport_proxy_options->host_address;
+                proxy_config.proxy_port = amqp_transport_proxy_options->port;
+                proxy_config.username = amqp_transport_proxy_options->username;
+                proxy_config.password = amqp_transport_proxy_options->password;
+                tls_io_config.underlying_io_parameters = &proxy_config;
+            }
+        }
+
+        if (failure_encountered)
+        {
+            // Failure from transport
+            result = NULL;
+        }
+        else
+        {
+            /* Codes_SRS_IOTHUBTRANSPORTAMQP_09_003: [If `platform_get_default_tlsio` returns NULL `getTLSIOTransport` shall return NULL.] */
+            /* Codes_SRS_IOTHUBTRANSPORTAMQP_09_004: [`getTLSIOTransport` shall return the `XIO_HANDLE` created using `xio_create`.] */
+            if ((result = xio_create(io_interface_description, &tls_io_config)) == NULL)
+            {
+                LogError("Failed to get the TLS/IO transport (xio_create failed)");
+            }
         }
     }
 

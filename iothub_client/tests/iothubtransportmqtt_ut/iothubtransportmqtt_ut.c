@@ -28,6 +28,7 @@ static void real_free(void* ptr)
 
 #include "azure_c_shared_utility/xio.h"
 #include "azure_c_shared_utility/tlsio.h"
+#include "azure_c_shared_utility/http_proxy_io.h"
 #include "iothubtransport_mqtt_common.h"
 
 #undef ENABLE_MOCKS
@@ -319,6 +320,9 @@ TEST_SUITE_INITIALIZE(suite_init)
     REGISTER_GLOBAL_MOCK_RETURN(platform_get_default_tlsio, TEST_TLSIO_INTERFACE_DESCRIPTION);
     REGISTER_GLOBAL_MOCK_FAIL_RETURN(platform_get_default_tlsio, NULL);
 
+    REGISTER_GLOBAL_MOCK_RETURN(http_proxy_io_get_interface_description, TEST_TLSIO_INTERFACE_DESCRIPTION);
+    REGISTER_GLOBAL_MOCK_FAIL_RETURN(http_proxy_io_get_interface_description, NULL);
+
     IoTHubTransportMqtt_SendMessageDisposition = ((TRANSPORT_PROVIDER*)MQTT_Protocol())->IoTHubTransport_SendMessageDisposition;
     IoTHubTransportMqtt_GetHostname = ((TRANSPORT_PROVIDER*)MQTT_Protocol())->IoTHubTransport_GetHostname;
     IoTHubTransportMqtt_SetOption = ((TRANSPORT_PROVIDER*)MQTT_Protocol())->IoTHubTransport_SetOption;
@@ -437,7 +441,8 @@ TEST_FUNCTION(IoTHubTransportMqtt_getSocketsIOTransport_success)
 /* Tests_SRS_IOTHUB_MQTT_TRANSPORT_01_004: [ - `port` shall be set to 8883. ]*/
 /* Tests_SRS_IOTHUB_MQTT_TRANSPORT_01_005: [ - `underlying_io_interface` shall be set to NULL. ]*/
 /* Tests_SRS_IOTHUB_MQTT_TRANSPORT_01_006: [ - `underlying_io_parameters` shall be set to NULL. ]*/
-TEST_FUNCTION(IoTHubTransportMqtt_getSocketsIOTransport_ignores_proxy_options)
+/* Tests_SRS_IOTHUB_MQTT_TRANSPORT_07_028: [ if mqtt_transport_proxy_options is not NULL getIoTransportProvider shall copy the proxy_hostname, proxy_port, username and password. ] */
+TEST_FUNCTION(IoTHubTransportMqtt_getSocketsIOTransport_proxy_options)
 {
     // arrange
     MQTT_TRANSPORT_PROXY_OPTIONS mqtt_proxy_options;
@@ -459,8 +464,8 @@ TEST_FUNCTION(IoTHubTransportMqtt_getSocketsIOTransport_ignores_proxy_options)
     mqtt_proxy_options.password = "shhhh";
 
     STRICT_EXPECTED_CALL(platform_get_default_tlsio());
-    STRICT_EXPECTED_CALL(xio_create(TEST_TLSIO_INTERFACE_DESCRIPTION, &tlsio_config))
-        .ValidateArgumentValue_io_create_parameters_AsType(UMOCK_TYPE(TLSIO_CONFIG*));
+    STRICT_EXPECTED_CALL(http_proxy_io_get_interface_description());
+    STRICT_EXPECTED_CALL(xio_create(TEST_TLSIO_INTERFACE_DESCRIPTION, IGNORED_PTR_ARG));
 
     ASSERT_IS_NOT_NULL(g_get_io_transport);
 
@@ -469,6 +474,40 @@ TEST_FUNCTION(IoTHubTransportMqtt_getSocketsIOTransport_ignores_proxy_options)
 
     // assert
     ASSERT_IS_NOT_NULL(xioTest);
+    ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls());
+}
+
+TEST_FUNCTION(IoTHubTransportMqtt_getSocketsIOTransport_proxy_options_returns_NULL_fail)
+{
+    // arrange
+    MQTT_TRANSPORT_PROXY_OPTIONS mqtt_proxy_options;
+    IOTHUBTRANSPORT_CONFIG config = { 0 };
+    TLSIO_CONFIG tlsio_config;
+    XIO_HANDLE xioTest;
+    SetupIothubTransportConfig(&config, TEST_DEVICE_ID, TEST_DEVICE_KEY, TEST_IOTHUB_NAME, TEST_IOTHUB_SUFFIX, TEST_PROTOCOL_GATEWAY_HOSTNAME);
+    (void)IoTHubTransportMqtt_Create(&config);
+    umock_c_reset_all_calls();
+
+    tlsio_config.hostname = TEST_STRING_VALUE;
+    tlsio_config.port = 8883;
+    tlsio_config.underlying_io_interface = NULL;
+    tlsio_config.underlying_io_parameters = NULL;
+
+    mqtt_proxy_options.host_address = "some_host";
+    mqtt_proxy_options.port = 444;
+    mqtt_proxy_options.username = "me";
+    mqtt_proxy_options.password = "shhhh";
+
+    STRICT_EXPECTED_CALL(platform_get_default_tlsio());
+    STRICT_EXPECTED_CALL(http_proxy_io_get_interface_description()).SetReturn(NULL);
+
+    ASSERT_IS_NOT_NULL(g_get_io_transport);
+
+    // act
+    xioTest = g_get_io_transport(TEST_STRING_VALUE, &mqtt_proxy_options);
+
+    // assert
+    ASSERT_IS_NULL(xioTest);
     ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls());
 }
 

@@ -11,6 +11,9 @@
 #include "iothub_message.h"
 #include "iothubtransportamqp.h"
 
+#include "azure_c_shared_utility/http_proxy_io.h"
+#include "azure_c_shared_utility/shared_util_options.h"
+
 #ifdef MBED_BUILD_TIMESTAMP
 #include "certs.h"
 #endif // MBED_BUILD_TIMESTAMP
@@ -26,6 +29,10 @@ static char msgText[1024];
 static char propText[1024];
 #define MESSAGE_COUNT       5
 #define DOWORK_LOOP_NUM     3
+
+static bool g_use_proxy = false;
+static const char* PROXY_ADDRESS = "127.0.0.1";
+#define PROXY_PORT                  8888
 
 typedef struct EVENT_INSTANCE_TAG
 {
@@ -167,6 +174,15 @@ void iothub_client_sample_amqp_run(void)
                 printf("failure to set option \"TrustedCerts\"\r\n");
             }
 #endif // MBED_BUILD_TIMESTAMP
+
+            HTTP_PROXY_OPTIONS http_proxy;
+            memset(&http_proxy, 0, sizeof(HTTP_PROXY_OPTIONS));
+            if (g_use_proxy)
+            {
+                http_proxy.host_address = PROXY_ADDRESS;
+                http_proxy.port = PROXY_PORT;
+                IoTHubClient_LL_SetOption(iotHubClientHandle, OPTION_HTTP_PROXY, &http_proxy);
+            }
 
             /* Setting Message call back, so we can receive Commands. */
             if (IoTHubClient_LL_SetMessageCallback(iotHubClientHandle, ReceiveMessageCallback, &receiveContext) != IOTHUB_CLIENT_OK)

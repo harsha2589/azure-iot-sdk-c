@@ -1,23 +1,22 @@
-
 # IoTHubTransportAMQP Requirements
+
 ================
 
 ## Overview
 
 IoTHubTransportAMQP is the library that enables communications with the iothub system using the AMQP protocol over plain TLS connection.
 
-
 ## Dependencies
 
 iothubtransport_amqp_common
 azure_c_shared_utility
-
 
 ## Exposed API
 
 ```c
 static const TRANSPORT_PROVIDER* AMQP_Protocol(void);
 ```
+
   The following static functions are provided in the fields of the TRANSPORT_PROVIDER structure:
 
     - IoTHubTransportAMQP_SendMessageDisposition,
@@ -38,16 +37,13 @@ static const TRANSPORT_PROVIDER* AMQP_Protocol(void);
     - IoTHubTransportAMQP_SetRetryPolicy,
     - IoTHubTransportAMQP_GetSendStatus
 
-
-
 ## IoTHubTransportAMQP_Create
 
 ```c
 static TRANSPORT_LL_HANDLE IoTHubTransportAMQP_Create(const IOTHUBTRANSPORT_CONFIG* config)
 ```
 
-**SRS_IOTHUBTRANSPORTAMQP_09_001: [**IoTHubTransportAMQP_Create shall create a TRANSPORT_LL_HANDLE by calling into the IoTHubTransport_AMQP_Common_Create function, passing `config` and getTLSIOTransport.**]**
-
+**SRS_IOTHUBTRANSPORTAMQP_09_001: [**`IoTHubTransportAMQP_Create` shall create a `TRANSPORT_LL_HANDLE` by calling into the `IoTHubTransport_AMQP_Common_Create` function, passing `config` and getTLSIOTransport.**]**
 
 ### getTLSIOTransport
 
@@ -67,9 +63,10 @@ static XIO_HANDLE getTLSIOTransport(const char* fqdn, const AMQP_TRANSPORT_PROXY
 
 **SRS_IOTHUBTRANSPORTAMQP_01_014: [** `underlying_io_parameters` shall be set to NULL. **]**
 
-**SRS_IOTHUBTRANSPORTAMQP_09_003: [**If `platform_get_default_tlsio` returns NULL `getTLSIOTransport` shall return NULL.**]**
+**SRS_IOTHUBTRANSPORTAMQP_09_003: [** If `platform_get_default_tlsio` returns NULL `getTLSIOTransport` shall return NULL.**]**
 **SRS_IOTHUBTRANSPORTAMQP_09_004: [**`getTLSIOTransport` shall return the `XIO_HANDLE` created using `xio_create`.**]**
 
+**SRS_IOTHUBTRANSPORTAMQP_07_001: [** If `amqp_transport_proxy_options` is not NULL `getIoTransportProvider` shall copy the `proxy_hostname`, `proxy_port`, `username` and `password`. **]**
 
 ## IoTHubTransportAMQP_Destroy
 
@@ -79,7 +76,6 @@ static void IoTHubTransportAMQP_Destroy(TRANSPORT_LL_HANDLE handle)
 
 **SRS_IOTHUBTRANSPORTAMQP_09_005: [**IoTHubTransportAMQP_Destroy shall destroy the TRANSPORT_LL_HANDLE by calling into the IoTHubTransport_AMQP_Common_Destroy().**]**
 
-
 ## IoTHubTransportAMQP_Register
 
 ```c
@@ -87,7 +83,6 @@ static IOTHUB_DEVICE_HANDLE IoTHubTransportAMQP_Register(TRANSPORT_LL_HANDLE han
 ```
 
 **SRS_IOTHUBTRANSPORTAMQP_09_006: [**IoTHubTransportAMQP_Register shall register the device by calling into the IoTHubTransport_AMQP_Common_Register().**]**
-
 
 ## IoTHubTransportAMQP_Unregister
 
@@ -97,7 +92,6 @@ static void IoTHubTransportAMQP_Unregister(IOTHUB_DEVICE_HANDLE deviceHandle)
 
 **SRS_IOTHUBTRANSPORTAMQP_09_007: [**IoTHubTransportAMQP_Unregister shall unregister the device by calling into the IoTHubTransport_AMQP_Common_Unregister().**]**
 
-
 ## IoTHubTransportAMQP_Subscribe_DeviceTwin
 
 ```c
@@ -105,7 +99,6 @@ int IoTHubTransportAMQP_Subscribe_DeviceTwin(IOTHUB_DEVICE_HANDLE handle)
 ```
 
 **SRS_IOTHUBTRANSPORTAMQP_09_008: [**IoTHubTransportAMQP_Subscribe_DeviceTwin shall invoke IoTHubTransport_AMQP_Common_Subscribe_DeviceTwin() and return its result.**]**
-
 
 ## IoTHubTransportAMQP_Unsubscribe_DeviceTwin
 
@@ -115,7 +108,6 @@ void IoTHubTransportAMQP_Unsubscribe_DeviceTwin(IOTHUB_DEVICE_HANDLE handle)
 
 **SRS_IOTHUBTRANSPORTAMQP_09_009: [**IoTHubTransportAMQP_Unsubscribe_DeviceTwin shall invoke IoTHubTransport_AMQP_Common_Unsubscribe_DeviceTwin()**]**
 
-
 ## IoTHubTransportAMQP_Subscribe_DeviceMethod
 
 ```c
@@ -123,7 +115,6 @@ int IoTHubTransportAMQP_Subscribe_DeviceMethod(IOTHUB_DEVICE_HANDLE handle)
 ```
 
 **SRS_IOTHUBTRANSPORTAMQP_09_010: [**IoTHubTransportAMQP_Subscribe_DeviceMethod shall invoke IoTHubTransport_AMQP_Common_Subscribe_DeviceMethod() and return its result.**]**
-
 
 ## IoTHubTransportAMQP_Unsubscribe_DeviceMethod
 
@@ -133,7 +124,6 @@ void IoTHubTransportAMQP_Unsubscribe_DeviceMethod(IOTHUB_DEVICE_HANDLE handle)
 
 **SRS_IOTHUBTRANSPORTAMQP_09_011: [**IoTHubTransportAMQP_Unsubscribe_DeviceMethod shall invoke IoTHubTransport_AMQP_Common_Unsubscribe_DeviceMethod()**]**
 
-
 ## IoTHubTransportAMQP_Subscribe
 
 ```c
@@ -141,7 +131,6 @@ static int IoTHubTransportAMQP_Subscribe(TRANSPORT_LL_HANDLE handle)
 ```
 
 **SRS_IOTHUBTRANSPORTAMQP_09_012: [**IoTHubTransportAMQP_Subscribe shall subscribe for D2C messages by calling into the IoTHubTransport_AMQP_Common_Subscribe().**]**
-
 
 ## IoTHubTransportAMQP_Unsubscribe
 
@@ -151,7 +140,6 @@ static void IoTHubTransportAMQP_Unsubscribe(TRANSPORT_LL_HANDLE handle)
 
 **SRS_IOTHUBTRANSPORTAMQP_09_013: [**IoTHubTransportAMQP_Unsubscribe shall subscribe for D2C messages by calling into the IoTHubTransport_AMQP_Common_Unsubscribe().**]**
 
-
 ## IoTHubTransportAMQP_ProcessItem
 
 ```c
@@ -159,7 +147,6 @@ static IOTHUB_PROCESS_ITEM_RESULT IoTHubTransportAMQP_ProcessItem(TRANSPORT_LL_H
 ```
 
 **SRS_IOTHUBTRANSPORTAMQP_09_014: [**IoTHubTransportAMQP_ProcessItem shall invoke IoTHubTransport_AMQP_Common_ProcessItem() and return its result.**]**
-
 
 ## IoTHubTransportAMQP_DoWork
 
@@ -169,7 +156,6 @@ static void IoTHubTransportAMQP_DoWork(TRANSPORT_LL_HANDLE handle, IOTHUB_CLIENT
 
 **SRS_IOTHUBTRANSPORTAMQP_09_015: [**IoTHubTransportAMQP_DoWork shall call into the IoTHubTransport_AMQP_Common_DoWork()**]**
 
-
 ## IoTHubTransportAMQP_GetSendStatus
 
 ```c
@@ -177,7 +163,6 @@ IOTHUB_CLIENT_RESULT IoTHubTransportAMQP_GetSendStatus(TRANSPORT_LL_HANDLE handl
 ```
 
 **SRS_IOTHUBTRANSPORTAMQP_09_016: [**IoTHubTransportAMQP_GetSendStatus shall get the send status by calling into the IoTHubTransport_AMQP_Common_GetSendStatus()**]**
-
 
 ## IoTHubTransportAMQP_SetOption
 
@@ -187,7 +172,6 @@ IOTHUB_CLIENT_RESULT IoTHubTransportAMQP_SetOption(TRANSPORT_LL_HANDLE handle, c
 
 **SRS_IOTHUBTRANSPORTAMQP_09_017: [**IoTHubTransportAMQP_SetOption shall set the options by calling into the IoTHubTransport_AMQP_Common_SetOption()**]**
 
-
 ## IoTHubTransportAMQP_GetHostname
 
 ```c
@@ -195,7 +179,6 @@ static STRING_HANDLE IoTHubTransportAMQP_GetHostname(TRANSPORT_LL_HANDLE handle)
 ```
 
 **SRS_IOTHUBTRANSPORTAMQP_09_018: [**IoTHubTransportAMQP_GetHostname shall get the hostname by calling into the IoTHubTransport_AMQP_Common_GetHostname()**]**
-
 
 ## IoTHubTransportAMQP_SetRetryPolicy
 
@@ -205,8 +188,8 @@ static int IoTHubTransportAMQP_SetRetryPolicy(TRANSPORT_LL_HANDLE handle, IOTHUB
 
 **SRS_IOTHUBTRANSPORTAMQP_09_020: [**IoTHubTransportAMQP_SetRetryPolicy shall call into the IoTHubTransport_AMQP_Common_SetRetryPolicy()**]**
 
-
 ## IoTHubTransportAMQP_SendMessageDisposition
+
 ```c
 IOTHUB_CLIENT_RESULT IoTHubTransportAMQP_SendMessageDisposition(MESSAGE_CALLBACK_INFO* messageData, IOTHUBMESSAGE_DISPOSITION_RESULT disposition);
 ```
