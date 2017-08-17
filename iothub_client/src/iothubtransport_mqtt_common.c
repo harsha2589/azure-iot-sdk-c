@@ -1162,7 +1162,7 @@ static void mqtt_operation_complete_callback(MQTT_CLIENT_HANDLE handle, MQTT_CLI
                             transport_data->isRecoverableError = false;
                         }
                         LogError("Connection Not Accepted: 0x%x: %s", connack->returnCode, retrieve_mqtt_return_codes(connack->returnCode) );
-                        (void)mqtt_client_disconnect(transport_data->mqttClient);
+                        (void)mqtt_client_disconnect(transport_data->mqttClient, NULL, NULL);
                         transport_data->mqttClientStatus = MQTT_CLIENT_STATUS_NOT_CONNECTED;
                         transport_data->currPacketState = PACKET_TYPE_ERROR;
                     }
@@ -1220,7 +1220,7 @@ static void mqtt_operation_complete_callback(MQTT_CLIENT_HANDLE handle, MQTT_CLI
 
 static void DisconnectFromClient(PMQTTTRANSPORT_HANDLE_DATA transport_data)
 {
-    (void)mqtt_client_disconnect(transport_data->mqttClient);
+    (void)mqtt_client_disconnect(transport_data->mqttClient, NULL, NULL);
     xio_destroy(transport_data->xioTransport);
     transport_data->xioTransport = NULL;
 
@@ -1605,7 +1605,7 @@ static int InitializeConnection(PMQTTTRANSPORT_HANDLE_DATA transport_data)
             {
                 if ((current_time - transport_data->mqtt_connect_time) / 1000 > (SAS_TOKEN_DEFAULT_LIFETIME*SAS_REFRESH_MULTIPLIER))
                 {
-                    (void)mqtt_client_disconnect(transport_data->mqttClient);
+                    (void)mqtt_client_disconnect(transport_data->mqttClient, NULL, NULL);
                     IoTHubClient_LL_ConnectionStatusCallBack(transport_data->llClientHandle, IOTHUB_CLIENT_CONNECTION_UNAUTHENTICATED, IOTHUB_CLIENT_CONNECTION_EXPIRED_SAS_TOKEN);
                     transport_data->mqttClientStatus = MQTT_CLIENT_STATUS_NOT_CONNECTED;
                     transport_data->currPacketState = UNKNOWN_TYPE;
