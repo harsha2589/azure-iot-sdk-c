@@ -14,7 +14,7 @@ extern "C"
 #endif
 
 	MOCKABLE_FUNCTION(, int, IoTHubMessage_CreateFromUamqpMessage, MESSAGE_HANDLE, uamqp_message, IOTHUB_MESSAGE_HANDLE*, iothubclient_message);
-	MOCKABLE_FUNCTION(, int, message_create_from_iothub_message, IOTHUB_MESSAGE_HANDLE, iothub_message, MESSAGE_HANDLE*, uamqp_message);
+	MOCKABLE_FUNCTION(, int, create_amqp_message_data, IOTHUB_MESSAGE_HANDLE, message_handle, BINARY_DATA*, body_binary_data);
 
 #ifdef __cplusplus
 }
