@@ -471,8 +471,8 @@ static STRING_HANDLE TEST_STRING_HANDLE = NULL;
 #define TEST_HEADER_1_5 "not-iothub-app-NAME1: VALUE1"
 #define TEST_HEADER_2 "iothub-app-NAME2: VALUE2"
 #define TEST_HEADER_3 "iothub-messageid: VALUE3"
-#define TEST_HEADER_4 "iothub-contenttype: VALUE4"
-#define TEST_HEADER_5 "iothub-contentencoding: VALUE5"
+#define TEST_HEADER_4 "ContentType: VALUE4"
+#define TEST_HEADER_5 "ContentEncoding: VALUE5"
 /*value returned by time() function*/
 /*for the purpose of this implementation, time_t represents the number of seconds since 1970, 1st jan, 0:0:0*/
 #define TEST_GET_TIME_VALUE 384739233
@@ -13852,8 +13852,8 @@ TEST_FUNCTION(IoTHubTransportHttp_DoWork_SetMessageId_FAILED)
 }
 #endif
 
-// Tests_SRS_TRANSPORTMULTITHTTP_09_003: [ The HTTP header value of `iothub-contenttype` shall be set in the `IoTHubMessage_SetCustomContentType`.  ]   
-// Tests_SRS_TRANSPORTMULTITHTTP_09_004: [ The HTTP header value of `iothub-contentencoding` shall be set in the `IoTHub_SetContentEncoding`.  ]   
+// Tests_SRS_TRANSPORTMULTITHTTP_09_003: [ The HTTP header value of `ContentType` shall be set in the `IoTHubMessage_SetCustomContentType`.  ]   
+// Tests_SRS_TRANSPORTMULTITHTTP_09_004: [ The HTTP header value of `ContentEncoding` shall be set in the `IoTHub_SetContentEncoding`.  ]   
 TEST_FUNCTION(IoTHubTransportHttp_DoWork_SetCustomContentType_SetContentEncoding_SUCCEED)
 {
     //arrange
